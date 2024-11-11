@@ -19,6 +19,10 @@ endgroup() {
 
 trap 'endgroup' ERR
 
+# snapshot containers don't ship with the SDK to save bandwidth
+# run setup.sh to download and extract the SDK
+[ ! -f setup.sh ] || bash setup.sh
+
 FEEDNAME="${FEEDNAME:-action}"
 BUILD_LOG="${BUILD_LOG:-1}"
 
@@ -51,6 +55,14 @@ endgroup
 group "feeds update -a"
 ./scripts/feeds update -a
 endgroup
+
+group "go 1.22.x"
+feeds_version=$(cat feeds.conf | head -1 | awk -Fopenwrt- '{print $2}')
+rm -rf feeds/packages/lang/golang
+git clone https://github.com/sbwml/packages_lang_golang -b 22.x feeds/packages/lang/golang
+rm -rf feeds/packages/lang/node
+git clone https://github.com/sbwml/feeds_packages_lang_node-prebuilt -b packages-$feeds_version feeds/packages/lang/node
+enagroup
 
 group "make defconfig"
 make defconfig
